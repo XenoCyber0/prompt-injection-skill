@@ -9,7 +9,7 @@ permissions:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       fail-fast: false
       matrix:
@@ -26,7 +26,10 @@ jobs:
       - name: Smoke (listener + harness + score)
         run: |
           python examples/listener.py --port 8123 --quiet --out /tmp/hits.log &
+          LISTENER=$!
           sleep 1
           python examples/run_harness.py --cases examples/cases.jsonl --url http://127.0.0.1:8123 --limit 2 --delay 0 --out /tmp/results.jsonl
+          kill "$LISTENER" || true
+          test "$(wc -l < /tmp/results.jsonl)" -eq 2
+          test -s /tmp/hits.log
           python examples/score.py /tmp/results.jsonl || true
-          test -s /tmp/results.jsonl
