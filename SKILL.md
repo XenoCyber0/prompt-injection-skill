@@ -75,7 +75,9 @@ drive it — each case: `id, entry_point, family, payload, expected_signal, seve
 
 - Local/dry-run: `examples/run_harness.py` replays cases against a Python callable or a
   JSON endpoint and records raw responses to `results.jsonl`.
-- Live: run the approved cases, cap request count, and log the exact request+response.
+- Live: run the approved cases, cap request count (`--limit` is mandatory against
+  production), and log the exact request+response. Pass auth with `--bearer`/`--header`,
+  pick the body key with `--field`, and bound responses with `--max-bytes`.
 - Check the **sink**, not just the answer string: a payload that only changes wording is
   a weak finding; a payload that fires an outbound request, mutates a tool arg, or leaks
   a canary is the real signal. Verify outbound hits against a canary listener

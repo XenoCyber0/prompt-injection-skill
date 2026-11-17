@@ -44,7 +44,9 @@ references/harness.md    # harness + regression design
 examples/run_harness.py  # drive cases (local callable or HTTP)
 examples/score.py        # classify results
 examples/listener.py     # canary listener
-examples/cases.jsonl
+examples/cases.jsonl     # example case set
+tests/                   # unit + integration tests (unittest)
+.github/workflows/ci.yml # CI: compile + tests
 ```
 
 ## Quickstart
@@ -60,6 +62,21 @@ python examples/score.py results.jsonl
 Payloads are non-destructive by default. HTTP mode is capped with `--limit`; run against a
 staging endpoint and a test account. Working payloads are the deliverable — raw responses
 are logged to prove each one.
+
+- **Listener exposure** — binds `127.0.0.1` by default. Use `--host 0.0.0.0` only behind a
+  tunnel/firewall; it logs every request and serves a 1x1 PNG, nothing else.
+- **Auth & TLS** — pass credentials with `--bearer` / `--header 'Name: value'`; use
+  `--insecure` only for self-signed staging certs. URLs must be http(s).
+- **Bounded I/O** — responses are capped with `--max-bytes`; listener caps body reads and
+  path length, and logs are newline-safe.
+- **Scoring** — a retext-only match is `Weak`; only a real sink hit (outbound request, tool
+  arg) scores `Fail`, so the report can't be inflated.
+
+## Tests
+
+```bash
+python -m unittest discover -s tests
+```
 
 ## License
 
