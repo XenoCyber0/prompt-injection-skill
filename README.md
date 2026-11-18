@@ -151,6 +151,12 @@ Requires Python 3.9+ and only the standard library — no dependencies to instal
 python -m unittest discover -s tests
 ```
 
+## Contributors
+
+- [@XenoCyber0](https://github.com/XenoCyber0) — creator & maintainer
+
+See [CONTRIBUTORS.md](CONTRIBUTORS.md).
+
 ## License
 
 [MIT](LICENSE).
