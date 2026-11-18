@@ -8,7 +8,7 @@ Maps the attack surface, generates payloads per entry point and sink, runs them 
 harness, and scores what actually broke — with canary tokens so every hit is provable.
 
 [![CI](https://github.com/XenoCyber0/prompt-injection-skill/actions/workflows/ci.yml/badge.svg)](https://github.com/XenoCyber0/prompt-injection-skill/actions/workflows/ci.yml)
-[![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/python-3.9%20%7C%203.10%20%7C%203.11%20%7C%203.12%20%7C%203.13-3776AB?logo=python&logoColor=white)](https://www.python.org/)
 [![License: MIT](https://api.unorouter.com/v1/media/AAAAAGsGHYhodHRwczovL2ltZy5zaGllbGRzLmlvL2JhZGdlL2xpY2Vuc2UtTUlULTIyYzU1ZQ.yPZmh75Ua9XxII4rGNljlB3W87nIL8_qZakWyG5rtDY)](LICENSE)
 [![Skills](https://api.unorouter.com/v1/media/AAAAAGsGHYhodHRwczovL2ltZy5zaGllbGRzLmlvL2JhZGdlL3dvcmtzJTIwd2l0aC1DbGF1ZGUlMjBDb2RlJTIwJUMyJUI3JTIwQ29kZXglMjAlQzIlQjclMjBDdXJzb3ItOGI1Y2Y2.LHBDkMt8Jq1JxsZtb2C4NuI0wqUjZrWSnWh0CAUvwvk)](#install)
 
@@ -128,8 +128,11 @@ SKILL.md                 the skill (agent instructions)
 references/              payload catalog · encodings · exfil · harness design
 examples/                run_harness.py · score.py · listener.py · cases.jsonl
 tests/                   unit + integration tests (unittest)
-.github/workflows/ci.yml compile + tests on Python 3.9–3.12
+.github/workflows/ci.yml compile + tests (Ubuntu 22.04, Python 3.9–3.13)
 ```
+
+CI pins Ubuntu 22.04 because `actions/setup-python` ships no ≤3.9 builds for newer runner
+images; the harness itself only needs the Python 3 standard library.
 
 ## Safety
 
@@ -141,6 +144,8 @@ Payloads are non-destructive by default; run live tests against staging and a te
 - **Honest scoring** — a retext-only match is `Weak`; only a sink hit is `Fail`, so reports can't be inflated.
 
 ## Tests
+
+Requires Python 3.9+ and only the standard library — no dependencies to install.
 
 ```bash
 python -m unittest discover -s tests
