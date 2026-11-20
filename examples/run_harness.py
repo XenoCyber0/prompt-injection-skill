@@ -60,6 +60,32 @@ def import_callable(spec):
     return getattr(sys.modules[module], attr)
 
 
+RESULT_KEYS = ("answer", "requests", "tool_args", "tool_calls")
+
+
+def shape_response(text, status):
+    """Record the body, lifting agent telemetry if the endpoint already returns it.
+
+    A plain chat endpoint returns prose; that becomes `answer`. An agent endpoint that
+    returns {"answer": ..., "tool_calls": [...]} is passed through, so score.py can see
+    the call sequence instead of guessing from prose.
+    """
+    out = {"answer": text, "requests": [], "status": status}
+    try:
+        data = json.loads(text)
+    except (ValueError, TypeError):
+        return out
+    if not isinstance(data, dict):
+        return out
+    lifted = {k: data[k] for k in RESULT_KEYS if k in data}
+    if not lifted:
+        return out
+    out.update(lifted)
+    if not isinstance(out["answer"], str):
+        out["answer"] = json.dumps(out["answer"])
+    return out
+
+
 def build_opener(insecure):
     ctx = ssl.create_default_context()
     if insecure:
@@ -91,10 +117,10 @@ def make_http_target(args):
         try:
             with opener.open(req, timeout=args.timeout) as resp:
                 text = resp.read(args.max_bytes).decode("utf-8", "replace")
-                return {"answer": text, "requests": [], "status": resp.status}
+                return shape_response(text, resp.status)
         except urllib.error.HTTPError as exc:
             text = exc.read(args.max_bytes).decode("utf-8", "replace")
-            return {"answer": text, "requests": [], "status": exc.code}
+            return shape_response(text, exc.code)
         except urllib.error.URLError as exc:
             raise RuntimeError(f"transport error: {exc.reason}") from exc
 

